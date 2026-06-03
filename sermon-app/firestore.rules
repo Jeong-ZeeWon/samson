@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 유저는 본인 데이터만 접근 가능
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /sermons/{sermonId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // 라이선스 키: 읽기만 허용 (등록 시 검증), 쓰기는 Cloud Functions에서만
+    match /licenses/{licenseKey} {
+      allow read: if request.auth == null || request.auth != null;
+      allow write: if request.auth != null;
+    }
+  }
+}
