@@ -31,9 +31,15 @@ export default function Settings() {
           <div className="flex items-center gap-3 text-sm">
             <CheckCircle size={16} className="text-green-500" />
             <span className="text-gray-500 w-20">플랜</span>
-            <span className="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">
-              영구 라이선스
-            </span>
+            {profile?.plan === 'admin' ? (
+              <span className="bg-indigo-100 text-indigo-700 text-xs px-2.5 py-1 rounded-full font-medium">
+                관리자
+              </span>
+            ) : (
+              <span className="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">
+                영구 라이선스
+              </span>
+            )}
           </div>
         </div>
       </div>

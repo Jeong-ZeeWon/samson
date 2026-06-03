@@ -3,12 +3,15 @@ import { Link, useNavigate } from 'react-router-dom'
 import { BookOpen, Key } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 
+const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',').map((e) => e.trim())
+
 export default function Register() {
   const { register } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', email: '', password: '', licenseKey: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const isAdmin = ADMIN_EMAILS.includes(form.email)
 
   function handleChange(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }))
@@ -41,7 +44,9 @@ export default function Register() {
             <span className="font-bold text-gray-900 text-lg">설교 아카이브</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">계정 만들기</h1>
-          <p className="text-sm text-gray-500 mt-1">라이선스 키가 필요합니다</p>
+          <p className="text-sm text-gray-500 mt-1">
+            {isAdmin ? '관리자 계정입니다' : '라이선스 키가 필요합니다'}
+          </p>
         </div>
 
         <div className="card p-6">
@@ -88,24 +93,31 @@ export default function Register() {
                 required
               />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
-                <Key size={13} />
-                라이선스 키
-              </label>
-              <input
-                name="licenseKey"
-                type="text"
-                value={form.licenseKey}
-                onChange={handleChange}
-                className="input-field font-mono tracking-wider"
-                placeholder="XXXX-XXXX-XXXX-XXXX"
-                required
-              />
-              <p className="text-xs text-gray-400 mt-1">
-                구매 시 이메일로 전달된 키를 입력하세요
-              </p>
-            </div>
+            {!isAdmin && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-1">
+                  <Key size={13} />
+                  라이선스 키
+                </label>
+                <input
+                  name="licenseKey"
+                  type="text"
+                  value={form.licenseKey}
+                  onChange={handleChange}
+                  className="input-field font-mono tracking-wider"
+                  placeholder="XXXX-XXXX-XXXX-XXXX"
+                  required
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  구매 시 이메일로 전달된 키를 입력하세요
+                </p>
+              </div>
+            )}
+            {isAdmin && (
+              <div className="bg-indigo-50 text-indigo-700 text-xs px-3 py-2 rounded-lg border border-indigo-200">
+                관리자 이메일 — 라이선스 키 없이 가입됩니다.
+              </div>
+            )}
             <button type="submit" disabled={loading} className="btn-primary w-full py-2.5">
               {loading ? '계정 생성 중...' : '계정 만들기'}
             </button>

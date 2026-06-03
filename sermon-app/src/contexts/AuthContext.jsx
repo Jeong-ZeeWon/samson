@@ -35,26 +35,39 @@ export function AuthProvider({ children }) {
   }
 
   async function register(email, password, licenseKey, name) {
-    // 라이선스 키 검증
-    const licenseRef = doc(db, 'licenses', licenseKey)
-    const licenseSnap = await getDoc(licenseRef)
+    const adminEmails = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',').map((e) => e.trim())
+    const isAdmin = adminEmails.includes(email)
 
-    if (!licenseSnap.exists()) throw new Error('유효하지 않은 라이선스 키입니다.')
-    if (licenseSnap.data().used) throw new Error('이미 사용된 라이선스 키입니다.')
+    if (!isAdmin) {
+      // 일반 사용자: 라이선스 키 검증
+      const licenseRef = doc(db, 'licenses', licenseKey)
+      const licenseSnap = await getDoc(licenseRef)
 
+      if (!licenseSnap.exists()) throw new Error('유효하지 않은 라이선스 키입니다.')
+      if (licenseSnap.data().used) throw new Error('이미 사용된 라이선스 키입니다.')
+
+      const cred = await createUserWithEmailAndPassword(auth, email, password)
+
+      await setDoc(doc(db, 'users', cred.user.uid), {
+        name, email, licenseKey,
+        createdAt: new Date().toISOString(),
+        plan: 'full',
+      })
+
+      await updateDoc(licenseRef, { used: true, usedBy: cred.user.uid, usedAt: new Date().toISOString() })
+
+      return cred
+    }
+
+    // 관리자: 라이선스 키 없이 바로 가입
     const cred = await createUserWithEmailAndPassword(auth, email, password)
 
-    // 유저 프로필 생성
     await setDoc(doc(db, 'users', cred.user.uid), {
-      name,
-      email,
-      licenseKey,
+      name, email,
+      licenseKey: 'ADMIN',
       createdAt: new Date().toISOString(),
-      plan: 'full',
+      plan: 'admin',
     })
-
-    // 라이선스 키 사용 처리
-    await updateDoc(licenseRef, { used: true, usedBy: cred.user.uid, usedAt: new Date().toISOString() })
 
     return cred
   }
